@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Stream Countdown local</title>
+<title>Stream Countdown</title>
 
 <style>
 
@@ -20,7 +20,7 @@ body{
     font-size:80px;
     font-weight:bold;
     color:white;
-    text-shadow:0 0 20px black;
+    text-shadow:0 0 25px black;
 }
 
 </style>
@@ -32,28 +32,13 @@ body{
 
 <script>
 
-// Unix Timestamp aus URL holen
-function getTimestampFromURL(){
-
-    const path = window.location.pathname;
-    const parts = path.split("/").filter(Boolean);
-
-    const timestamp = parts[parts.length - 1];
-
-    return parseInt(timestamp);
-}
-
-const targetTimestamp = getTimestampFromURL();
+// Zielzeit als Unix Timestamp (Sekunden)
+const targetTimestamp = 1735689600; // hier ändern
 
 function updateTimer(){
 
     const now = Math.floor(Date.now()/1000);
     let diff = targetTimestamp - now;
-
-    if(isNaN(targetTimestamp)){
-        document.getElementById("timer").textContent = "Invalid Timestamp";
-        return;
-    }
 
     if(diff <= 0){
         document.getElementById("timer").textContent = "00h:00m:00s";
