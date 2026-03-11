@@ -2,64 +2,158 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Stream Countdown</title>
-
+<title>Countdown Generator</title>
 <style>
-
 body{
     margin:0;
-    background:transparent;
+    font-family:Arial,sans-serif;
+    background:#1a1a1a;
+    color:white;
     display:flex;
     justify-content:center;
     align-items:center;
+    flex-direction:column;
     height:100vh;
-    font-family:Arial, sans-serif;
+    text-align:center;
+}
+
+a{
+    color: #0af;
+}
+
+input, select, button{
+    padding:10px;
+    margin:5px;
+    font-size:16px;
+    border-radius:5px;
+    border:none;
 }
 
 #timer{
     font-size:80px;
     font-weight:bold;
-    color:white;
-    text-shadow:0 0 25px black;
+    text-shadow:0 0 15px black;
+    margin-top:30px;
 }
 
+.hidden{
+    display:none;
+}
 </style>
 </head>
-
 <body>
 
-<div id="timer">00h:00m:00s</div>
+<h1>Countdown Generator</h1>
+<p>Gib deinen <a href="https://www.unixtimestamp.com/" target="_blank">Unix Timestamp</a> ein:</p>
+
+<input type="number" id="timestampInput" placeholder="z.B. 1735689600" />
+<br>
+<label>Design:</label>
+<select id="designSelect">
+    <option value="standard">Standard</option>
+    <option value="glow">Glow</option>
+</select>
+<br>
+<button id="generateBtn">Countdown erstellen</button>
+
+<div id="timer" class="hidden">00h:00m:00s</div>
+<p id="info"></p>
+<button id="downloadBtn" class="hidden">HTML herunterladen</button>
 
 <script>
+let interval;
 
-// Zielzeit als Unix Timestamp (Sekunden)
-const targetTimestamp = 1735689600; // hier ändern
+function startCountdown(timestamp, design){
+    const timerDiv = document.getElementById("timer");
+    timerDiv.className = design;
+    timerDiv.classList.remove('hidden');
+    document.getElementById("info").textContent = '';
 
-function updateTimer(){
+    function updateTimer(){
+        const now = Math.floor(Date.now()/1000);
+        let diff = timestamp - now;
 
-    const now = Math.floor(Date.now()/1000);
-    let diff = targetTimestamp - now;
+        if(diff <= 0){
+            timerDiv.textContent = "00h:00m:00s";
+            clearInterval(interval);
+            return;
+        }
 
-    if(diff <= 0){
-        document.getElementById("timer").textContent = "00h:00m:00s";
+        const hours = Math.floor(diff / 3600);
+        const minutes = Math.floor((diff % 3600) / 60);
+        const seconds = diff % 60;
+
+        timerDiv.textContent = 
+            `${String(hours).padStart(2,'0')}h:${String(minutes).padStart(2,'0')}m:${String(seconds).padStart(2,'0')}s`;
+    }
+
+    clearInterval(interval);
+    updateTimer();
+    interval = setInterval(updateTimer,1000);
+}
+
+// Event Listener für den Button
+document.getElementById("generateBtn").addEventListener("click",()=>{
+    const ts = parseInt(document.getElementById("timestampInput").value);
+    const design = document.getElementById("designSelect").value;
+
+    if(isNaN(ts)){
+        alert("Bitte gültigen Unix Timestamp eingeben!");
         return;
     }
 
-    const hours = Math.floor(diff / 3600);
-    const minutes = Math.floor((diff % 3600) / 60);
-    const seconds = diff % 60;
+    // URL für OBS/TikTok generieren
+    const url = `${window.location.origin}${window.location.pathname}${ts}`;
+    document.getElementById("info").innerHTML = `Countdown-URL für OBS/TikTok: <a href="${url}" target="_blank">${url}</a>`;
 
-    const h = String(hours).padStart(2,'0');
-    const m = String(minutes).padStart(2,'0');
-    const s = String(seconds).padStart(2,'0');
-
-    document.getElementById("timer").textContent =
-        `${h}h:${m}m:${s}s`;
+    // HTML Download Button vorbereiten
+    document.getElementById("downloadBtn").classList.remove("hidden");
+    document.getElementById("downloadBtn").onclick = ()=>{
+        const htmlContent = `<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Countdown</title>
+<style>
+body{margin:0;background:transparent;display:flex;justify-content:center;align-items:center;height:100vh;font-family:Arial,sans-serif;}
+#timer{font-size:80px;font-weight:bold;color:white;text-shadow:0 0 20px black;}
+${design==='glow'?'#timer{color:#0af;text-shadow:0 0 30px #0af;}':''}
+</style>
+</head>
+<body>
+<div id="timer">00h:00m:00s</div>
+<script>
+const targetTimestamp = ${ts};
+function updateTimer(){
+    const now = Math.floor(Date.now()/1000);
+    let diff = targetTimestamp - now;
+    if(diff <= 0){document.getElementById("timer").textContent="00h:00m:00s";return;}
+    const h=Math.floor(diff/3600),m=Math.floor((diff%3600)/60),s=diff%60;
+    document.getElementById("timer").textContent=\`\${String(h).padStart(2,'0')}h:\${String(m).padStart(2,'0')}m:\${String(s).padStart(2,'0')}s\`;
 }
-
 setInterval(updateTimer,1000);
 updateTimer();
+</script>
+</body>
+</html>`;
+        const blob = new Blob([htmlContent], {type:'text/html'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `countdown_${ts}.html`;
+        a.click();
+    }
 
+    startCountdown(ts, design);
+});
+
+// Wenn die Seite mit /TIMESTAMP geladen wird
+const path = window.location.pathname.split("/").filter(Boolean);
+const lastPart = path[path.length-1];
+if(!isNaN(parseInt(lastPart))){
+    document.getElementById("timestampInput").value = lastPart;
+    startCountdown(parseInt(lastPart), 'standard');
+    document.getElementById("info").innerHTML = 'Countdown läuft direkt von URL.';
+}
 </script>
 
 </body>
