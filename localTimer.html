@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Stream Countdown local</title>
+
+<style>
+
+body{
+    margin:0;
+    background:transparent;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    font-family:Arial, sans-serif;
+}
+
+#timer{
+    font-size:80px;
+    font-weight:bold;
+    color:white;
+    text-shadow:0 0 20px black;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="timer">00h:00m:00s</div>
+
+<script>
+
+// Unix Timestamp aus URL holen
+function getTimestampFromURL(){
+
+    const path = window.location.pathname;
+    const parts = path.split("/").filter(Boolean);
+
+    const timestamp = parts[parts.length - 1];
+
+    return parseInt(timestamp);
+}
+
+const targetTimestamp = getTimestampFromURL();
+
+function updateTimer(){
+
+    const now = Math.floor(Date.now()/1000);
+    let diff = targetTimestamp - now;
+
+    if(isNaN(targetTimestamp)){
+        document.getElementById("timer").textContent = "Invalid Timestamp";
+        return;
+    }
+
+    if(diff <= 0){
+        document.getElementById("timer").textContent = "00h:00m:00s";
+        return;
+    }
+
+    const hours = Math.floor(diff / 3600);
+    const minutes = Math.floor((diff % 3600) / 60);
+    const seconds = diff % 60;
+
+    const h = String(hours).padStart(2,'0');
+    const m = String(minutes).padStart(2,'0');
+    const s = String(seconds).padStart(2,'0');
+
+    document.getElementById("timer").textContent =
+        `${h}h:${m}m:${s}s`;
+}
+
+setInterval(updateTimer,1000);
+updateTimer();
+
+</script>
+
+</body>
+</html>
